@@ -1,0 +1,59 @@
+{
+    "files.associations": {
+        "hub75.pio.h": "c",
+        "mountains_128x64_rgb565.h": "c",
+        "hub75.h": "c",
+        "stdio.h": "c",
+        "dma.h": "c",
+        "type_traits": "c",
+        "stdlib.h": "c",
+        "freertos.h": "c",
+        "cmath": "c",
+        "*.tcc": "c",
+        "cinttypes": "c",
+        "cstdlib": "c",
+        "task.h": "c",
+        "ps_debug.h": "c",
+        "time.h": "c",
+        "ps_hub75.pio.h": "c",
+        "irq.h": "c",
+        "ps_hub75_64.pio.h": "c",
+        "ledmx.h": "c",
+        "math.h": "c",
+        "queue.h": "c",
+        "semphr.h": "c",
+        "pico.h": "c",
+        "string.h": "c"
+    },
+    "python.linting.enabled": true,
+    "python.analysis.typeshedPaths": [
+        ".vscode\\Pico-Stub"
+    ],
+    "python.languageServer": "Pylance",
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.extraPaths": [
+        ".vscode\\Pico-Stub\\stubs"
+    ]
+    ,
+    // These settings tweaks to the cmake plugin will ensure
+    // that you debug using cortex-debug instead of trying to launch
+    // a Pico binary on the host
+    "cmake.statusbar.advanced": {
+        "debug": {
+            "visibility": "hidden"
+        },
+        "launch": {
+            "visibility": "hidden"
+        },
+        "build": {
+            "visibility": "default"
+        },
+        "buildTarget": {
+            "visibility": "hidden"
+        }
+    },
+    "cmake.buildBeforeRun": true,
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "cortex-debug.openocdPath": "D:/_DevTools/openocd-0.11.0-3/bin/openocd_rp2040.exe",
+    "cortex-debug.variableUseNaturalFormat": false
+}

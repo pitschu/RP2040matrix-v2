@@ -35,9 +35,8 @@ This is done using the `hub75_update()` function in the source file `hub75_BCM.c
 As already described above, several display runs are required to display 8-bit color values. An 8-bit color value can represent 256 different brightnesses and therefore requires 256 runs with HUB75 LED matrices. The normal process for LEDs is PWM modulation. For example, the color value 134 (= 0x86 = 0b10000110) is output as a PWM signal with 134 HIGH units and 122 (= 256 - 134) LOW units. The LED therefore lights up at about 52% of its maximum brightness. This method is very easy and effective to implement, but has one major disadvantage. With a refresh rate of 50Hz, the image will flicker quite a lot, since all the LEDs are on for a period of time during the output of an image and then turn off afterwards. This then repeats itself with the frame rate and leads to flickering.
 Here, instead of PWM modulation, so-called BCM modulation can be used. Here, too, it must of course be ensured that for a color value of 134 the LED is off for 122 of 256 time units and on for 134 of 256 time units. However, it is not necessary for the 122 or 134 time units to be in one piece. The BCM process ensures exactly this. The 122 OFF times and the 134 ON times are simply distributed so that they appear alternately as far as possible. The flickering is massively reduced because the LED is not only switched OFF and ON once during the 256 time segments, but much more frequently.
 
-## Benutzung des Treibers
-Die eigentliche Treibersoftware besteht aus einer Handvoll Funktionen. Diese sind:
-
+## Using the driver
+The actual driver software consists of a handful of functions. These are:
 * `void hub75_config(int bpp)` Configure and start the HUB75 driver hardware.\
     The driver supports from 4 up to 8 pixel planes. 
     This function first stops all driver operation currently running and then

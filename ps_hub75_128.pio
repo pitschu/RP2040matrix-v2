@@ -4,14 +4,15 @@
  *	(c) Peter Schulten, Mülheim, Germany
  *	peter_(at)_pitschu.de
  *
- *	Die unveränderte Wiedergabe und Verteilung dieses gesamten Sourcecodes
- *	in beliebiger Form ist gestattet, sofern obiger Hinweis erhalten bleibt.
- *
- * 	Ich stelle diesen Sourcecode kostenlos zur Verfügung und biete daher weder
- *	Support an noch garantiere ich für seine Funktionsfähigkeit. Außerdem
- *	übernehme ich keine Haftung für die Folgen seiner Nutzung.
- *	Der Sourcecode darf nur zu privaten, nicht gewerblichen Zwecken verwendet 
- *  und modifiziert werden.	Darüber hinaus gehende Verwendung bedarf meiner Zustimmung.
+ *  Unmodified reproduction and distribution of this entire 
+ *  source code in any form is permitted provided the above
+ *  notice is preserved.
+ *  I make this source code available free of charge and therefore
+ *  offer neither support nor guarantee for its functionality. 
+ *  Furthermore, I assume no liability for the consequences of
+ *  its use.
+ *  The source code may only be used and modified for private,
+ *  non-commercial purposes. Any further use requires my consent.
  *
  *	History
  *	25.01.2022	pitschu		Start of work

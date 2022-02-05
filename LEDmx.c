@@ -33,11 +33,11 @@
 #include "hub75.h"
 #include "LEDmx.h"
 
-uint32_t display_buffers[2][DISPLAY_FRAMEBUFFER_SIZE];
-uint32_t* display_front_buf = &display_buffers[0][0];
-uint32_t* display_back_buf = &display_buffers[1][0];
+uint32_t display_buffers[DISPLAY_FRAMEBUFFER_SIZE];
+uint32_t* display_front_buf = &display_buffers[0];
+uint32_t* display_back_buf = &display_buffers[0];
 
-uint32_t* ledmxActiveImage = &display_buffers[0][0];
+uint32_t* ledmxActiveImage = &display_buffers[0];
 
 uint8_t  overlayBuffer[DISPLAY_FRAMEBUFFER_SIZE];
 

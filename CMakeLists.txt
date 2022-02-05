@@ -85,7 +85,7 @@ target_compile_definitions(RP2040matrix_64_BCM PRIVATE
 	PICO_DEFAULT_UART_TX_PIN=28
 	PICO_DEFAULT_UART_RX_PIN=29
         HUB75_BCM=1
-        PCB_LAYOUT_V1=1
+        PCB_LAYOUT_V2=1
         HUB75_SIZE=4040         # 4040 = 64x64, other value is 8080 for 128x128
 )
 pico_add_extra_outputs(RP2040matrix_64_BCM)

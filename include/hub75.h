@@ -28,6 +28,11 @@
 #include "pico/binary_info.h"
 #include "hardware/dma.h"
 
+
+// Integer between 1 and 8
+// Lower numbers cause LSBs to be skipped
+#define DISPLAY_MAXPLANES 8
+
 extern uint16_t    bitPlanes;
 
 #ifdef PCB_LAYOUT_V1
@@ -209,10 +214,6 @@ typedef uint32_t	rgb_t;
 
 // Scan factor of the display
 #define DISPLAY_SCAN 32
-
-// Integer between 1 and 8
-// Lower numbers cause LSBs to be skipped
-#define DISPLAY_BITDEPTH 8
 
 
 /*! \brief Configure and start the HUB75 driver hardware

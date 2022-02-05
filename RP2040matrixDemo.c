@@ -29,7 +29,6 @@
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
 #include "LEDmx.h"
-#include "mountains_128x64_rgb565.h"
 
 
 char				logTimeBuf[32];
@@ -101,7 +100,7 @@ void pongTask(void* para)
 
 void app_main(void* para)
 {
-    vTaskDelay(300);    // delay 4  secs to give user a chance to start putty
+    vTaskDelay(500);    // delay 4  secs to give user a chance to start putty
 
     LOG_DEBUG("main started. LED_PIN=%d\n", PICO_DEFAULT_LED_PIN);
     // Initialize HUB75
@@ -113,7 +112,8 @@ void app_main(void* para)
     LEDmx_SetMasterBrightness(20);
     LEDmx_ClearScreen(0x020202);
     vTaskDelay(100);
-
+#if 0
+#include "mountains_128x64_rgb565.h"
     const uint16_t* img = (const uint16_t*)mountains_128x64;
     for (int y = 0; y < DISPLAY_HEIGHT; y++) 
     {
@@ -123,7 +123,7 @@ void app_main(void* para)
         }
     }
     vTaskDelay(500);
-
+#endif
     LEDmx_ClearScreen(BLACK);
 
     // Fill both framebuffers with a default pattern
@@ -161,7 +161,7 @@ void app_main(void* para)
     xTaskCreate(
         pongTask,       // Function that implements the task.
         "Pong task",   // Text name for the task.
-        2000,             // Stack size in words, not bytes.
+        1000,             // Stack size in words, not bytes.
         (void*)1,    // Parameter passed into the task.
         tskIDLE_PRIORITY,// Priority at which the task is created.
         &xHandle);
@@ -170,7 +170,7 @@ void app_main(void* para)
     xTaskCreate(
         blinkTask,       // Function that implements the task.
         "Blink task",   // Text name for the task.
-        2000,             // Stack size in words, not bytes.
+        500,             // Stack size in words, not bytes.
         (void*)1,    // Parameter passed into the task.
         tskIDLE_PRIORITY,// Priority at which the task is created.
         &xHandle);

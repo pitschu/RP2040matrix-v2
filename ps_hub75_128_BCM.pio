@@ -32,6 +32,7 @@
 
 public entry_data:
 .wrap_target
+
 public shift0:
     set x, 31           side 0  ; init loop counter for 128 columns
     irq wait 0          side 0  ; set and wait for IRQ-0 to be reset
@@ -39,22 +40,22 @@ public shift0:
 loop0:
     pull block          side 0  ; get cols N..N+3 (triggers data DMA channel))
     out pins, 16        side 0  ; ----------- appy data ----------------------
-noOE0:
-    jmp !x, loop1       side 0  ; last 4 pixels are handled below
+    jmp !x, loop1 [1]   side 1  ; last 4 pixels are handled below
+
     out pins, 12        side 0  ; ----------- appy data ----------------------
-    out y, 4            side 1
+    out y, 4            side 0
     pull block          side 1
     jmp !y, noOE1       side 1  ; enable OE when brightness limit reached
     set pins 0          side 0
 noOE1:
-    out pins, 12 [1]    side 0  ; ----------- appy data ----------------------
-    out y, 4            side 1
-    jmp !y, noOE2       side 1
+    out pins, 12        side 0  ; ----------- appy data ----------------------
+    out y, 4            side 0
+    jmp !y, noOE2 [1]   side 1
     set pins 0          side 0
 noOE2:
-    out pins, 6  [1]    side 0  ; ----------- appy data ----------------------
-    out y, 2            side 1
-    jmp !y, noOE3       side 1
+    out pins, 12        side 0  ; ----------- appy data ----------------------
+    out y, 4            side 0
+    jmp !y, noOE3 [1]   side 1
     set pins 0          side 0
 noOE3:
     jmp x--, loop0      side 0

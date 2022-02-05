@@ -84,7 +84,7 @@ typedef struct alpha_s {
     uint8_t		r, g, b;
 } alpha_t;
 
-extern uint32_t display_buffers[2][DISPLAY_FRAMEBUFFER_SIZE];
+extern uint32_t display_buffers[DISPLAY_FRAMEBUFFER_SIZE];
 extern uint32_t* display_front_buf;
 extern uint32_t* display_back_buf;
 

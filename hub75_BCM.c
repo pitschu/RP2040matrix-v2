@@ -30,14 +30,20 @@
 #include "ps_debug.h"
 #include "hub75.h"
 
+#if HUB75_SIZE == 4040
+uint32_t frameBuffer[DISPLAY_MAXPLANES * (DISPLAY_WIDTH / 4) * DISPLAY_SCAN]; // each entry contains RGB data for 2 or 4 consective pixels on one HUB75 channel
+#elif HUB75_SIZE == 8080
+uint32_t frameBuffer[DISPLAY_MAXPLANES * (DISPLAY_WIDTH / 2) * DISPLAY_SCAN]; // each entry contains RGB data for 2 pixels on two HUB75 channels
+#else
+    #error "V2 board supports 64x64 or 128x128 layouts"
+#endif
+rgb_t* addrBuffer[(1<<DISPLAY_MAXPLANES)];
+uint16_t  bcmCounter = 1;     // index in addrBuffer array
 
-rgb_t *frameBuffer = NULL; // each entry contains RGB data for 2 or 4 consective pixels on one HUB75 channel
-rgb_t** addrBuffer = NULL;
-uint16_t  bcmCounter = 1;     // index into addrBuffer array
-uint32_t* ctrlBuffer  = NULL; // N bit planes * # of scan lines
+uint32_t ctrlBuffer[DISPLAY_MAXPLANES * DISPLAY_SCAN]; // N bit planes * # of scan lines
 
 uint16_t    masterBrightness = 0;
-uint16_t    bitPlanes = DISPLAY_BITDEPTH;
+uint16_t    bitPlanes = DISPLAY_MAXPLANES;
 
 static PIO display_pio = pio0;
 static uint display_sm_data;
@@ -49,7 +55,7 @@ static int display_dma_chan;
 static int ctrl_dma_chan;
 
 static rgb_t overlayColors[16];
-static uint8_t *overlayBuffer = NULL;
+
 
 static void dma_hub75_handler()
 {
@@ -250,36 +256,15 @@ void hub75_config(int bpp)
     }
     irq_remove_handler(DMA_IRQ_0, dma_hub75_handler);
 
-    if (frameBuffer)
-        free(frameBuffer);
 
 #if HUB75_SIZE == 4040
-    frameBuffer = (uint32_t*)malloc(bitPlanes * (DISPLAY_WIDTH / 4) * DISPLAY_SCAN * sizeof(uint32_t));
     memset(frameBuffer, 0, bitPlanes * (DISPLAY_WIDTH / 4) * DISPLAY_SCAN * sizeof(uint32_t));
 #elif HUB75_SIZE == 8080
-    frameBuffer = (uint32_t*)malloc(bitPlanes * (DISPLAY_WIDTH / 2) * DISPLAY_SCAN * sizeof(uint32_t));
     memset(frameBuffer, 0, bitPlanes * (DISPLAY_WIDTH / 2) * DISPLAY_SCAN * sizeof(uint32_t));
+#else
+    #error "V2 board supports 64x64 or 128x128 layouts"
 #endif
-
-    if (overlayBuffer)
-        free(overlayBuffer);
-
-#if HUB75_SIZE == 4040
-    overlayBuffer = (uint8_t*)malloc(bitPlanes * (DISPLAY_WIDTH / 4) * DISPLAY_SCAN * sizeof(uint8_t));
-    memset(overlayBuffer, 0, bitPlanes * (DISPLAY_WIDTH / 4) * DISPLAY_SCAN * sizeof(uint8_t));
-#elif HUB75_SIZE == 8080
-    overlayBuffer = (uint8_t*)malloc(bitPlanes * (DISPLAY_WIDTH / 2) * DISPLAY_SCAN * sizeof(uint8_t));
-    memset(overlayBuffer, 0, bitPlanes * (DISPLAY_WIDTH / 2) * DISPLAY_SCAN * sizeof(uint8_t));
-#endif
-
-    if (ctrlBuffer)
-        free(ctrlBuffer);
-    ctrlBuffer = (uint32_t*)malloc(bitPlanes * DISPLAY_SCAN * sizeof(uint32_t));
     memset(ctrlBuffer, 0, bitPlanes * DISPLAY_SCAN * sizeof(uint32_t));
-
-    if (addrBuffer)
-        free(addrBuffer);
-    addrBuffer = (uint32_t**)malloc((1<<bitPlanes) * sizeof(uint32_t*));
     memset(addrBuffer, 0, (1<<bitPlanes) * sizeof(uint32_t*));
     
     for (int bPos = 0; bPos < bitPlanes; bPos++)
@@ -292,7 +277,7 @@ void hub75_config(int bpp)
 #if HUB75_SIZE == 4040
                 addrBuffer[i] = &frameBuffer[(bitPlanes - 1 - bPos) * (DISPLAY_WIDTH / 4) * DISPLAY_SCAN];
 #elif HUB75_SIZE == 8080
-                addrBuffer[i] = &frameBuffer[(bitPlanes - bPos) * (DISPLAY_WIDTH / 2) * DISPLAY_SCAN];
+                addrBuffer[i] = &frameBuffer[(bitPlanes - 1 - bPos) * (DISPLAY_WIDTH / 2) * DISPLAY_SCAN];
 #endif
             }
         }
@@ -322,6 +307,7 @@ void hub75_set_overlaycolor(int index, rgb_t color)
 
 
 
+#if HUB75_SIZE == 4040
 int hub75_update(rgb_t *image, uint8_t *overlay)
 {
     int x, y, b, plane;
@@ -344,7 +330,6 @@ int hub75_update(rgb_t *image, uint8_t *overlay)
             uint8_t* op_lu = overlay + ((y + DISPLAY_SCAN) * DISPLAY_WIDTH);
 
             brtCnt = 0;
-
             for (x = 0; x < DISPLAY_WIDTH / 4; x++)     // 4 pixels per framebuffer word
             {
                 rgb_t ipu = *ip_uu++;
@@ -428,3 +413,104 @@ int hub75_update(rgb_t *image, uint8_t *overlay)
 
     return 0;
 }
+
+
+#elif HUB75_SIZE == 8080
+int hub75_update(rgb_t* image, uint8_t* overlay)
+{
+    int x, y, b, plane;
+    rgb_t* ip;
+    uint32_t* fp, * cp;
+    uint8_t flag = 0;
+    uint8_t brtCnt = 0;
+
+    for (b = (8 - bitPlanes); b < 8; b++)     // only MSB bits of RGB color
+    {
+        ip = image;
+        fp = &frameBuffer[(b - (8 - bitPlanes)) * DISPLAY_SCAN * (DISPLAY_WIDTH / 2)];
+        cp = &ctrlBuffer[(b - (8 - bitPlanes)) * DISPLAY_SCAN];
+
+        for (y = 0; y < DISPLAY_SCAN; y++)
+        {
+            rgb_t* ip_uu = image + (y * DISPLAY_WIDTH);
+            rgb_t* ip_lu = image + ((y + DISPLAY_SCAN) * DISPLAY_WIDTH);
+            rgb_t* ip_ul = image + ((y + DISPLAY_HEIGHT/2) * DISPLAY_WIDTH);
+            rgb_t* ip_ll = image + (((y + DISPLAY_HEIGHT / 2) + DISPLAY_SCAN) * DISPLAY_WIDTH);
+            uint8_t* op_uu = overlay + (y * DISPLAY_WIDTH);
+            uint8_t* op_lu = overlay + ((y + DISPLAY_SCAN) * DISPLAY_WIDTH);
+            uint8_t* op_ul = overlay + ((y + DISPLAY_HEIGHT / 2) * DISPLAY_WIDTH);
+            uint8_t* op_ll = overlay + (((y + DISPLAY_HEIGHT / 2) + DISPLAY_SCAN) * DISPLAY_WIDTH);
+
+            brtCnt = 0;
+            for (x = 0; x < DISPLAY_WIDTH / 2; x++)     // 4 pixels per framebuffer word
+            {
+                rgb_t ipuu = *ip_uu++;
+                rgb_t iplu = *ip_lu++;
+                rgb_t ipul = *ip_ul++;
+                rgb_t ipll = *ip_ll++;
+
+                if (*op_uu != 0) ipuu = overlayColors[*op_uu];
+                op_uu++;
+                if (*op_lu != 0) iplu = overlayColors[*op_lu];
+                op_lu++;
+                if (*op_ul != 0) ipul = overlayColors[*op_ul];
+                op_ul++;
+                if (*op_ll != 0) ipll = overlayColors[*op_ll];
+                op_ll++;
+
+                rgb_t img = (((ipuu & (1 << b)) >> b) << 2 |
+                        (((ipuu >> 8) & (1 << b)) >> b) << 1 |
+                        ((ipuu >> 16) & (1 << b)) >> b) |
+                    ((((iplu & (1 << b)) >> b) << 2 |
+                        (((iplu >> 8) & (1 << b)) >> b) << 1 |
+                        (((iplu >> 16) & (1 << b))) >> b) << 3) |
+                    ((((ipul & (1 << b)) >> b) << 2 |
+                        (((ipul >> 8) & (1 << b)) >> b) << 1 |
+                        (((ipul >> 16) & (1 << b))) >> b) << 6) |
+                    ((((ipll & (1 << b)) >> b) << 2 |
+                        (((ipll >> 8) & (1 << b)) >> b) << 1 |
+                        (((ipll >> 16) & (1 << b))) >> b) << 9);
+
+                if (++brtCnt > masterBrightness) img |= (1 << 12);
+
+                ipuu = *ip_uu++;
+                iplu = *ip_lu++;
+                ipul = *ip_ul++;
+                ipll = *ip_ll++;
+
+                if (*op_uu != 0) ipuu = overlayColors[*op_uu];
+                op_uu++;
+                if (*op_lu != 0) iplu = overlayColors[*op_lu];
+                op_lu++;
+                if (*op_ul != 0) ipul = overlayColors[*op_ul];
+                op_ul++;
+                if (*op_ll != 0) ipll = overlayColors[*op_ll];
+                op_ll++;
+
+                img |= ((((ipuu & (1 << b)) >> b) << 2 |
+                        (((ipuu >> 8) & (1 << b)) >> b) << 1 |
+                        ((ipuu >> 16) & (1 << b)) >> b) |
+                    ((((iplu & (1 << b)) >> b) << 2 |
+                        (((iplu >> 8) & (1 << b)) >> b) << 1 |
+                        (((iplu >> 16) & (1 << b))) >> b) << 3) |
+                    ((((ipul & (1 << b)) >> b) << 2 |
+                        (((ipul >> 8) & (1 << b)) >> b) << 1 |
+                        (((ipul >> 16) & (1 << b))) >> b) << 6) |
+                    ((((ipll & (1 << b)) >> b) << 2 |
+                        (((ipll >> 8) & (1 << b)) >> b) << 1 |
+                        (((ipll >> 16) & (1 << b))) >> b) << 9)) << 16;
+
+                if (++brtCnt > masterBrightness) img |= (1 << (16+12));
+
+                *fp++ = img;
+            }
+
+            uint32_t ctrl = ((y) & 0x1F);                           // ADDR lines: bits 0..4
+
+            *cp++ = ctrl;
+        }
+    }
+
+    return 0;
+}
+#endif

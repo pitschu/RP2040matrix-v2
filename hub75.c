@@ -33,7 +33,7 @@ uint32_t *frameBuffer = NULL; // each entry contains RGB data for 2 or 4 consect
 uint32_t *ctrlBuffer  = NULL; // N bit planes * # of scan lines
 
 uint16_t    masterBrightness = 0;
-uint16_t    bitPlanes = DISPLAY_BITDEPTH;
+uint16_t    bitPlanes = DISPLAY_MAXPLANES;
 
 static PIO display_pio = pio0;
 static uint display_sm_data;
